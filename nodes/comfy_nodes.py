@@ -45,16 +45,20 @@ class InstantCharacterLoadModelFromLocal:
         
         pipe = InstantCharacterFluxPipeline.from_pretrained(base_model_path, torch_dtype=torch.bfloat16)
 
+        # Initialize adapter first
+        pipe.init_adapter(
+            image_encoder_path=image_encoder_path,
+            image_encoder_2_path=image_encoder_2_path,
+            subject_ipadapter_cfg=dict(subject_ip_adapter_path=ip_adapter_path, nb_token=1024),
+        )
+
+        # Then move to device or enable offloading
         if cpu_offload:
+            print("Enabling CPU offload for InstantCharacter pipeline...")
             pipe.enable_sequential_cpu_offload()
+            print("CPU offload enabled.")
         else:
             pipe.to(device)
-        
-        pipe.init_adapter(
-            image_encoder_path=image_encoder_path, 
-            image_encoder_2_path=image_encoder_2_path, 
-            subject_ipadapter_cfg=dict(subject_ip_adapter_path=ip_adapter_path, nb_token=1024), 
-        )
 
         return (pipe,)
 
@@ -88,13 +92,10 @@ class InstantCharacterLoadModel:
         pipe = InstantCharacterFluxPipeline.from_pretrained(
             base_model, 
             torch_dtype=torch.bfloat16,
-            cache_dir=cache_dir,    
+            cache_dir=cache_dir,
         )
-        if cpu_offload:
-            pipe.enable_sequential_cpu_offload()
-        else:
-            pipe.to(device)
-        
+
+        # Initialize adapter first
         pipe.init_adapter(
             image_encoder_path=image_encoder_path,
             cache_dir=image_encoder_cache_dir,
@@ -105,7 +106,15 @@ class InstantCharacterLoadModel:
                 nb_token=1024
             ),
         )
-        
+
+        # Then move to device or enable offloading
+        if cpu_offload:
+            print("Enabling CPU offload for InstantCharacter pipeline...")
+            pipe.enable_sequential_cpu_offload()
+            print("CPU offload enabled.")
+        else:
+            pipe.to(device)
+
         return (pipe,)
 
 

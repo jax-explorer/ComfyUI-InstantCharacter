@@ -35,6 +35,8 @@ class InstantCharacterFluxPipeline(FluxPipeline):
 
     @torch.inference_mode()
     def encode_siglip_image_emb(self, siglip_image, device, dtype):
+        # Ensure encoder is on the correct device before use
+        self.siglip_image_encoder.to(device, dtype=dtype)
         siglip_image = siglip_image.to(device, dtype=dtype)
         res = self.siglip_image_encoder(siglip_image, output_hidden_states=True)
 
@@ -47,6 +49,8 @@ class InstantCharacterFluxPipeline(FluxPipeline):
 
     @torch.inference_mode()
     def encode_dinov2_image_emb(self, dinov2_image, device, dtype):
+        # Ensure encoder is on the correct device before use
+        self.dino_image_encoder_2.to(device, dtype=dtype)
         dinov2_image = dinov2_image.to(device, dtype=dtype)
         res = self.dino_image_encoder_2(dinov2_image, output_hidden_states=True)
 
@@ -457,11 +461,13 @@ class InstantCharacterFluxPipeline(FluxPipeline):
 
                 # subject adapter
                 if subject_image is not None:
+                    # Ensure projector is on the correct device before use when offloading
+                    self.subject_image_proj_model.to(latents.device, dtype=latents.dtype)
                     subject_image_prompt_embeds = self.subject_image_proj_model(
-                        low_res_shallow=subject_image_embeds_dict['image_embeds_low_res_shallow'],
-                        low_res_deep=subject_image_embeds_dict['image_embeds_low_res_deep'],
-                        high_res_deep=subject_image_embeds_dict['image_embeds_high_res_deep'],
-                        timesteps=timestep.to(dtype=latents.dtype), 
+                        low_res_shallow=subject_image_embeds_dict['image_embeds_low_res_shallow'].to(latents.device, dtype=latents.dtype),
+                        low_res_deep=subject_image_embeds_dict['image_embeds_low_res_deep'].to(latents.device, dtype=latents.dtype),
+                        high_res_deep=subject_image_embeds_dict['image_embeds_high_res_deep'].to(latents.device, dtype=latents.dtype),
+                        timesteps=timestep.to(device=latents.device, dtype=latents.dtype),
                         need_temb=True
                     )[0]
                     self._joint_attention_kwargs['emb_dict'] = dict(
