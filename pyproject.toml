@@ -1,0 +1,15 @@
+[project]
+name = "instantcharacter"
+description = "[a/InstantCharacter](https://github.com/Tencent/InstantCharacter) ComfyUI Warpper"
+version = "1.0.0"
+license = {file = "LICENSE"}
+dependencies = ["diffusers==0.32.2", "easydict", "einops", "peft", "pillow", "protobuf", "requests", "safetensors", "sentencepiece", "transformers", "timm"]
+
+[project.urls]
+Repository = "https://github.com/jax-explorer/ComfyUI-InstantCharacter"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI-InstantCharacter"
+Icon = ""
